@@ -1,0 +1,256 @@
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
+
+const HomeScreen = () => {
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [animation] = useState(new Animated.Value(0));
+
+  const handleImagePress = () => {
+    setIsFlipped(!isFlipped);
+    Animated.timing(animation, {
+      toValue: isFlipped ? 0 : 1,
+      duration: 1500,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const interpolateFront = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
+
+  const interpolateBack = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["180deg", "360deg"],
+  });
+
+  const frontAnimatedStyle = {
+    transform: [{ rotateY: interpolateFront }],
+    opacity: animation.interpolate({
+      inputRange: [0, 0.5, 1],
+      outputRange: [1, 0.5, 0],
+    }),
+  };
+
+  const backAnimatedStyle = {
+    transform: [{ rotateY: interpolateBack }],
+    opacity: animation.interpolate({
+      inputRange: [0, 0.5, 1],
+      outputRange: [0, 0.5, 1],
+    }),
+  };
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity onPress={handleImagePress}>
+        <Animated.View style={[styles.flipContainer, frontAnimatedStyle]}>
+          <Image
+            source={require("../assets/images/image1.jpg")}
+            style={styles.image}
+          />
+        </Animated.View>
+
+        <Animated.View style={[styles.flipContainer, frontAnimatedStyle]}>
+          <Image
+            source={require("../assets/images/image2.jpg")}
+            style={styles.image}
+          />
+        </Animated.View>
+        <Animated.View style={[styles.flipContainer, frontAnimatedStyle]}>
+          <Image
+            source={require("../assets/images/image1.jpg")}
+            style={styles.image}
+          />
+        </Animated.View>
+        <Animated.View style={[styles.flipContainer, frontAnimatedStyle]}>
+          <Image
+            source={require("../assets/images/image2.jpg")}
+            style={styles.image}
+          />
+        </Animated.View>
+        {/* <Animated.View
+          style={[styles.flipContainer, styles.backImage, backAnimatedStyle]}
+        >
+          <Image
+            source={require("../assets/images/image2.jpg")}
+            style={styles.image}
+          />
+        </Animated.View> */}
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    // backgroundColor: "blue",
+  },
+  flipContainer: {
+    backfaceVisibility: "hidden",
+    // position: "absolute",
+    width: "300px",
+    backgroundColor: "green",
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gridTemplateRows: "repeat(2, 1fr)",
+  },
+  backImage: {
+    transform: [{ rotateY: "180deg" }],
+  },
+  image: {
+    width: 100,
+    height: 100,
+  },
+});
+
+export default HomeScreen;
+
+
+
+
+netx one 
+
+
+
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  View,
+  ImageBackground,
+  TouchableOpacity,
+  Animated,
+  Image,
+} from "react-native";
+
+const HomeScreen = () => {
+  const [flippedIndexes, setFlippedIndexes] = useState([]);
+  const [animations, setAnimations] = useState([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]);
+
+  // Ensure animations array is updated when the number of images changes
+  useEffect(() => {
+    setAnimations((prevAnimations) => {
+      const newAnimations = [...prevAnimations];
+      while (newAnimations.length < flippedIndexes.length) {
+        newAnimations.push(new Animated.Value(0));
+      }
+      return newAnimations;
+    });
+  }, [flippedIndexes]);
+
+  const handleImagePress = (index) => {
+    const newFlippedIndexes = [...flippedIndexes];
+    const currentIndex = newFlippedIndexes.indexOf(index);
+    if (currentIndex === -1) {
+      newFlippedIndexes.push(index);
+    } else {
+      newFlippedIndexes.splice(currentIndex, 1);
+    }
+    setFlippedIndexes(newFlippedIndexes);
+  };
+
+  useEffect(() => {
+    flippedIndexes.forEach((index) => {
+      // Ensure the index exists in animations array
+      if (animations[index]) {
+        Animated.timing(animations[index], {
+          toValue: flippedIndexes.includes(index) ? 1 : 0,
+          duration: 1500,
+          useNativeDriver: true,
+        }).start();
+      }
+    });
+  }, [flippedIndexes, animations]);
+
+  const animatedStyles = (index) => {
+    // Ensure the index exists in animations array
+    if (animations[index]) {
+      const interpolateFront = animations[index].interpolate({
+        inputRange: [0, 1],
+        outputRange: ["0deg", "180deg"],
+      });
+
+      return {
+        transform: [{ rotateY: interpolateFront }],
+        opacity: animations[index].interpolate({
+          inputRange: [0, 0.5, 1],
+          outputRange: [1, 0.5, 0],
+        }),
+      };
+    }
+    return {}; // Return an empty object if index is invalid
+  };
+
+  return (
+    <ImageBackground
+      // source={require("../assets/images/image3.jpg")}
+      style={styles.container}
+    >
+      <View style={styles.flipContainer}>
+        {[0].map((index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => handleImagePress(index)}
+            style={styles.imageContainer}
+          >
+            <Animated.View
+              style={[styles.imageContainer, animatedStyles(index)]}
+            >
+              <Image
+                source={require("../assets/images/image1.jpg")}
+                style={styles.image}
+              />
+            </Animated.View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </ImageBackground>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    height: "100%",
+    backgroundColor: "black",
+  },
+  flipContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-around", // Adjusted to space around each card
+    height: 800,
+    backgroundColor: "rgba(255, 255, 255)",
+    marginTop: 10,
+  },
+  imageContainer: {
+    width: "50%", // Adjusted width to accommodate three cards
+    height: 100,
+    marginBottom: 10,
+    marginTop: 10,
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    marginTop: 10,
+  },
+});
+
+export default HomeScreen;
+
